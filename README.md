@@ -16,7 +16,7 @@ Ou pela linha de comando: `npx vercel --prod` dentro desta pasta.
 
 ## Opções na URL
 - `?tv=1` — modo TV (tela cheia, fontes maiores, faixa rolando)
-- `?destaque=soja` — muda o card de destaque (`boi`, `bezerro`, `acucar`, `etanol`, `anidro`, `milho`, `soja`, `trigo`, `algodao`)
+- `?destaque=soja` — muda o card de destaque (`boi`, `bezerro`, `acucar`, `milho`, `soja`, `trigo`, `algodao`)
 
 Ordem dos cards: lista `ORDEM` em `api/cotacoes.js`. Logo: troque `logo.svg` (aparece ao lado do nome).
 
@@ -25,7 +25,7 @@ São referências das bolsas internacionais (CME, CBOT, ICE), via Yahoo Finance,
 
 Para adicionar/remover produtos, edite a lista `ATIVOS` em `api/cotacoes.js`.
 
-**Etanol hidratado:** vem do contrato futuro da B3 (vencimento mais próximo negociado), já em R$/m³, lido da página pública da Notícias Agrícolas. Atualiza uma vez por dia, no fechamento.
+**Etanol (hidratado combustível, hidratado outros fins e anidro):** indicadores semanais CEPEA/ESALQ (R$/litro), num card largo,, republicados pela Notícias Agrícolas. Saem uma vez por semana (sexta ou segunda). A opção diária pela B3 está comentada em `api/cotacoes.js`.
 
 **Boi gordo por estado:** seção abaixo dos cards, com o Indicador do Boi da Datagro (R$/@, por sigla de estado), lido da página pública da Notícias Agrícolas. Ranking do maior para o menor, diferença para a média dos estados e variação do dia. Se a fonte falhar, a seção some e o resto da tela continua normal.
 

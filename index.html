@@ -90,6 +90,17 @@
   .skel{background:linear-gradient(90deg,#111,#1C1C1C,#111);background-size:200% 100%;animation:sk 1.4s infinite;border-radius:8px;height:1em}
   @keyframes sk{to{background-position:-200% 0}}
 
+  /* Etanol: 3 indicadores CEPEA num card largo */
+  .card.etanol{grid-column:span 2;display:flex;flex-direction:column}
+  .et-lista{display:grid;gap:8px;margin-top:10px;flex:1;align-content:space-between}
+  .et{display:grid;grid-template-columns:minmax(0,1.25fr) auto minmax(60px,1fr) auto;align-items:center;gap:14px;min-height:38px}
+  .et .n{font-size:14px;line-height:1.2}
+  .et .n small{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--texto-2);margin-top:2px}
+  .et .p{font-family:"JetBrains Mono",monospace;font-weight:500;font-size:22px;white-space:nowrap}
+  .et .p span{font-size:11px;color:var(--texto-2);margin-left:4px}
+  .et canvas{width:100%;height:30px;margin:0}
+  @media (max-width:899px){ .card.etanol{grid-column:auto} .et{grid-template-columns:minmax(0,1fr) auto auto} .et canvas{display:none} }
+
   /* Boi gordo por estado */
   .estados{background:var(--cartao);border:1px solid var(--borda);border-radius:18px;padding:20px 22px;display:flex;flex-direction:column}
   .estados .cab{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
@@ -182,7 +193,7 @@
 
 
   <footer>
-    <div>CME, CBOT e ICE convertidos pelo USD/BRL · etanol hidratado: B3 · anidro: CEPEA/ESALQ semanal · boi por estado: Datagro · fontes Investing.com, Yahoo Finance e Notícias Agrícolas · não substitui o preço físico da praça.</div>
+    <div>CME, CBOT e ICE convertidos pelo USD/BRL · etanol hidratado e anidro: CEPEA/ESALQ semanal · boi por estado: Datagro · fontes Investing.com, Yahoo Finance e Notícias Agrícolas · não substitui o preço físico da praça.</div>
     <div><a class="tv-link" href="?tv=1">Modo TV ↗</a></div>
   </footer>
 </div>
@@ -237,7 +248,24 @@ function render(d){
   }
 
 
-  document.getElementById('grade').innerHTML = d.itens.filter(i=>i!==h).map(i=> i.erro ? `
+  const ETN = ['etanol','outros','anidro'];
+  const etanois = ETN.map(id=>d.itens.find(i=>i.id===id)).filter(Boolean);
+  const NOMES = {etanol:['Hidratado','combustível'], outros:['Hidratado','outros fins'], anidro:['Anidro','combustível']};
+  const cardEtanol = !etanois.length ? '' : `
+    <article class="card etanol">
+      <div class="topo"><div><h3>Etanol</h3><div class="bolsa">CEPEA/ESALQ · semanal · R$/litro${etanois[0]?.orig ? ' · '+etanois[0].orig : ''}</div></div></div>
+      <div class="et-lista">${etanois.map(i=> i.erro ? `
+        <div class="et"><div class="n">${NOMES[i.id][0]}<small>${NOMES[i.id][1]}</small></div><div class="erro" style="margin:0">indisponível</div></div>` : `
+        <div class="et">
+          <div class="n">${NOMES[i.id][0]}<small>${NOMES[i.id][1]}</small></div>
+          <div class="p">${pr(i)}</div>
+          <canvas data-id="${i.id}"></canvas>
+          <span class="var ${cls(i.variacao)}">${fmtVar(i.variacao)}</span>
+        </div>`).join('')}
+      </div>
+    </article>`;
+  const lista = d.itens.filter(i=>i!==h && !ETN.slice(1).includes(i.id));
+  document.getElementById('grade').innerHTML = lista.map(i=> i.id==='etanol' ? cardEtanol : i.erro ? `
     <article class="card"><div class="topo"><div><h3>${i.nome}</h3><div class="bolsa">${i.bolsa||''}</div></div></div>
     <div class="erro">Cotação indisponível no momento.</div></article>` : `
     <article class="card">

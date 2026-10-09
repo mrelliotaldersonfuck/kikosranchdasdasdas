@@ -18,9 +18,12 @@ const ATIVOS = [
 // Etanol — páginas públicas da Notícias Agrícolas (valores já em R$)
 const NA = 'https://www.noticiasagricolas.com.br/cotacoes/sucroenergetico/';
 const ETANOIS = [
-  // B3 publica em R$/m³ → divide por 1000 para mostrar R$/litro
-  { id: 'etanol',  nome: 'Etanol hidratado', url: NA + 'etanol-b3-prego-regular',
-    divisor: 1000, fonte: 'Notícias Agrícolas', tipo: 'b3' },
+  { id: 'etanol',  nome: 'Etanol hidratado', url: NA + 'indicador-semanal-etanol-hidratado-cepea-esalq',
+    divisor: 1,    fonte: 'Notícias Agrícolas', tipo: 'cepea' },
+  // alternativa diária (contrato futuro B3, R$/m³):
+  // { id: 'etanol', nome: 'Etanol hidratado', url: NA + 'etanol-b3-prego-regular', divisor: 1000, fonte: 'Notícias Agrícolas', tipo: 'b3' },
+  { id: 'outros',  nome: 'Etanol hidratado outros fins', url: NA + 'indicador-semanal-etanol-hidratado-outros-fins-cepea-esalq',
+    divisor: 1,    fonte: 'Notícias Agrícolas', tipo: 'cepea' },
   { id: 'anidro',  nome: 'Etanol anidro',    url: NA + 'indicador-semanal-etanol-anidro-cepea-esalq',
     divisor: 1,    fonte: 'Notícias Agrícolas', tipo: 'cepea' },
 ];
@@ -208,10 +211,16 @@ module.exports = async (req, res) => {
     let boiEstados = null;
     try { boiEstados = await boiPorEstado(); } catch (e) { boiEstados = { erro: String(e.message || e) }; }
 
-    // Boi gordo: usa a média Datagro dos estados (mesma base do ranking); CME só se a Datagro falhar
+    // Boi gordo: usa o Indicador Datagro de SP (mesma base do ranking); se faltar SP, a média dos estados; CME só se a Datagro falhar
     if (boiEstados && !boiEstados.erro) {
       const k = itens.findIndex((i) => i.id === 'boi');
-      const boi = {
+      const sp = boiEstados.estados.find((e) => e.uf === 'SP');
+      const boi = sp ? {
+        id: 'boi', nome: 'Boi gordo · SP', bolsa: 'Datagro · São Paulo',
+        unidade: 'R$/@', preco: sp.preco, variacao: sp.variacao,
+        precoOrig: null, orig: `fechamento ${boiEstados.data.slice(0, 5)}`,
+        historico: sp.historico, fonte: 'Datagro', aviso: null,
+      } : {
         id: 'boi', nome: 'Boi gordo', bolsa: `Datagro · média de ${boiEstados.nEstados} estados`,
         unidade: 'R$/@', preco: boiEstados.media, variacao: boiEstados.mediaVar,
         precoOrig: null, orig: `fechamento ${boiEstados.data.slice(0, 5)}`,
@@ -221,7 +230,7 @@ module.exports = async (req, res) => {
     }
 
     // ordem de exibição na tela
-    const ORDEM = ['boi', 'bezerro', 'acucar', 'etanol', 'anidro', 'milho', 'soja', 'trigo', 'algodao'];
+    const ORDEM = ['boi', 'bezerro', 'acucar', 'etanol', 'outros', 'anidro', 'milho', 'soja', 'trigo', 'algodao'];
     itens.sort((x, y) => (ORDEM.indexOf(x.id) + 1 || 99) - (ORDEM.indexOf(y.id) + 1 || 99));
 
     res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=1800');
